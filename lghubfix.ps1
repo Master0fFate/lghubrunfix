@@ -1,6 +1,5 @@
-# Check if the script is running with admin privileges
+# LGHUBFIX
 if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-    # Restart the script with admin permissions
     $scriptPath = $MyInvocation.MyCommand.Path
     if (!$scriptPath) { $scriptPath = $PSCommandPath }
     if ($scriptPath) {
@@ -15,15 +14,15 @@ $TaskName = "LGHUBAutoStart"
 $TaskDescription = "Autostart lghub as admin on PC startup"
 $TaskPath = "\"
 $TaskExecutable = "C:\Program Files\LGHUB\lghub.exe"
+$UserId = "$env:USERDOMAIN\$env:USERNAME"
 
-# Remove existing task if it exists
 Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue | Unregister-ScheduledTask -Confirm:$false
 
 try {
     $Action = New-ScheduledTaskAction -Execute $TaskExecutable
-    $Trigger = New-ScheduledTaskTrigger -AtLogon
+    $Trigger = New-ScheduledTaskTrigger -AtLogOn -User $UserId
     $Settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -Hidden
-    $Principal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -LogonType ServiceAccount -RunLevel Highest
+    $Principal = New-ScheduledTaskPrincipal -UserId $UserId -LogonType Interactive -RunLevel Highest
 
     Register-ScheduledTask -TaskName $TaskName `
                           -Description $TaskDescription `
