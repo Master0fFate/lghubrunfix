@@ -15,11 +15,19 @@ $TaskDescription = "Autostart lghub as admin on PC startup"
 $TaskPath = "\"
 $TaskExecutable = "C:\Program Files\LGHUB\lghub.exe"
 $UserId = "$env:USERDOMAIN\$env:USERNAME"
+$VbsPath = "$env:ProgramData\LGHUBWorker.vbs"
+
+$VbsCode = @"
+WScript.Sleep 5000
+Set WshShell = CreateObject("WScript.Shell")
+WshShell.Run """$TaskExecutable""", 0, False
+"@
+Set-Content -Path $VbsPath -Value $VbsCode -Force
 
 Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue | Unregister-ScheduledTask -Confirm:$false
 
 try {
-    $Action = New-ScheduledTaskAction -Execute $TaskExecutable
+    $Action = New-ScheduledTaskAction -Execute "wscript.exe" -Argument "`"$VbsPath`""
     $Trigger = New-ScheduledTaskTrigger -AtLogOn -User $UserId
     $Settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -Hidden
     $Principal = New-ScheduledTaskPrincipal -UserId $UserId -LogonType Interactive -RunLevel Highest
