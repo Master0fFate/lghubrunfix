@@ -34,6 +34,9 @@ $module = Get-Module LGHubFix
         Assert (@(Get-Installations $testRoot).Count -eq 1) 'Explicit path discovery works with literal paths'
         Assert (@(Get-Installations (Join-Path $testRoot 'missing')).Count -eq 0) 'Nonexistent explicit path returns no installation'
     } finally { Remove-Item -LiteralPath $testRoot -Recurse -Force }
+    # Read-only default discovery exercises absent registry keys on clean CI runners.
+    $discovered = @(Get-Installations)
+    Assert ($discovered.Count -ge 0) 'Default discovery tolerates missing optional registry records under Stop'
     # Test shortcut ownership and persistence through a fake COM/file boundary.
     $script:exists = $false
     $script:shortcut = [pscustomobject]@{ TargetPath=''; WorkingDirectory=''; Arguments='old'; Description=''; WindowStyle=0 }
